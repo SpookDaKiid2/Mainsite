@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from './supabaseClient';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
@@ -95,78 +96,99 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="p-6 max-w-xl mx-auto space-y-4">
-      <h1 className="text-2xl font-bold">Welcome to your dashboard</h1>
-      <p>Email: {user?.email}</p>
+    <motion.div
+      className="p-4 sm:p-6 max-w-2xl mx-auto space-y-6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+    >
+      <h1 className="text-2xl font-bold">Artist Dashboard</h1>
+      <p className="text-sm text-gray-600">Email: {user?.email}</p>
 
       {/* Bio */}
-      <textarea
-        className="w-full p-2 border rounded"
-        rows={4}
-        value={bio}
-        placeholder="Your artist bio..."
-        onChange={(e) => setBio(e.target.value)}
-      />
+      <div>
+        <label className="block font-semibold mb-1">Bio</label>
+        <textarea
+          className="w-full p-2 border rounded"
+          rows={4}
+          value={bio}
+          placeholder="Your artist bio..."
+          onChange={(e) => setBio(e.target.value)}
+        />
+      </div>
 
       {/* Profile Image Upload */}
-      <div className="space-y-2">
+      <div>
+        <label className="block font-semibold mb-1">Profile Picture</label>
         <input type="file" accept="image/*" onChange={handleUpload} />
         {profileUrl && (
           <img
             src={profileUrl}
             alt="Profile"
-            className="w-24 h-24 object-cover rounded-full border"
+            className="w-24 h-24 object-cover rounded-full border mt-2"
           />
         )}
       </div>
 
       {/* Release Schedule */}
       <div>
-        <h2 className="text-lg font-bold mt-6">Release Schedule</h2>
+        <label className="block font-semibold mb-1 mt-4">Release Schedule</label>
         <textarea
           className="w-full p-2 border rounded"
           rows={5}
           value={releaseSchedule}
-          placeholder="Add upcoming releases, dates, notes..."
+          placeholder="Upcoming releases, dates, notes..."
           onChange={(e) => setReleaseSchedule(e.target.value)}
         />
       </div>
 
       {/* Music Upload */}
-      <div className="mt-6">
-        <h2 className="text-lg font-bold">Upload Music</h2>
+      <div>
+        <h2 className="text-lg font-bold mt-6 mb-2">Upload Music</h2>
         <input type="file" accept=".mp3,.wav,.zip" onChange={handleMusicUpload} />
-        <ul className="mt-2 space-y-2">
-          {uploads.map((url, idx) => (
-            <li key={idx}>
-              <a
-                className="text-blue-600 underline"
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Download {url.split('/').pop()}
-              </a>
-            </li>
-          ))}
+        <ul className="mt-4 space-y-4">
+          {uploads.map((url, idx) => {
+            const fileName = url.split('/').pop();
+            const isAudio = fileName.endsWith('.mp3') || fileName.endsWith('.wav');
+            return (
+              <li key={idx} className="border rounded p-3 shadow-sm">
+                <p className="font-semibold text-sm mb-2">{fileName}</p>
+                {isAudio ? (
+                  <audio controls className="w-full">
+                    <source src={url} />
+                    Your browser does not support the audio element.
+                  </audio>
+                ) : (
+                  <a
+                    className="text-blue-600 underline"
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Download
+                  </a>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </div>
 
       {/* Actions */}
-      <div className="space-x-2">
+      <div className="flex gap-3">
         <button
           onClick={handleSave}
-          className="rounded-full bg-blue-600 text-white px-6 py-2"
+          className="rounded-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 transition"
         >
           Save
         </button>
         <button
           onClick={handleLogout}
-          className="rounded-full bg-red-600 text-white px-6 py-2"
+          className="rounded-full bg-red-600 hover:bg-red-700 text-white px-6 py-2 transition"
         >
           Logout
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 }
