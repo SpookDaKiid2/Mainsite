@@ -1,262 +1,156 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from './supabaseClient';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { v4 as uuidv4 } from 'uuid';
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [bio, setBio] = useState('');
-  const [profileUrl, setProfileUrl] = useState('');
-  const [headerUrl, setHeaderUrl] = useState('');
-  const [uploads, setUploads] = useState([]);
+  const [spotify, setSpotify] = useState('');
+  const [instagram, setInstagram] = useState('');
   const [releaseSchedule, setReleaseSchedule] = useState('');
-  const [spotifyUrl, setSpotifyUrl] = useState('');
-  const [instagramUrl, setInstagramUrl] = useState('');
+  const [profilePic, setProfilePic] = useState(null);
+  const [musicFile, setMusicFile] = useState(null);
+  const [bannerImage, setBannerImage] = useState(null);
+
   const navigate = useNavigate();
 
   useEffect(() => {
-    (async () => {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const user = sessionData.session?.user;
-      if (!user) return navigate('/login');
-      setUser(user);
-
-      const { data } = await supabase
-        .from('artist_profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (data) {
-        setBio(data.bio || '');
-        setProfileUrl(data.profile_url || '');
-        setHeaderUrl(data.header_url || '');
-        setReleaseSchedule(data.release_schedule || '');
-        setSpotifyUrl(data.spotify_url || '');
-        setInstagramUrl(data.instagram_url || '');
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setUser(user);
+        loadProfile(user.id);
       } else {
-        await supabase.from('artist_profiles').insert({ user_id: user.id });
+        navigate('/login');
       }
-
-      const { data: files } = await supabase
-        .storage
-        .from('artist-uploads')
-        .list(`${user.id}/music`, { limit: 100 });
-
-      if (files) {
-        const urls = files.map(file => {
-          const { publicUrl } = supabase
-            .storage
-            .from('artist-uploads')
-            .getPublicUrl(`${user.id}/music/${file.name}`);
-          return publicUrl;
-        });
-        setUploads(urls);
-      }
-    })();
-  }, [navigate]);
-
-  const handleSave = async () => {
-    await supabase.from('artist_profiles').upsert({
-      user_id: user.id,
-      bio,
-      profile_url: profileUrl,
-      header_url: headerUrl,
-      release_schedule: releaseSchedule,
-      spotify_url: spotifyUrl,
-      instagram_url: instagramUrl,
     });
-    alert('Saved!');
-  };
+  }, []);
 
-  const handleLogout = async () => {
+  async function loadProfile(userId) {
+    const { data, error } = await supabase.from('artist_profiles').select('*').eq('id', userId).single();
+    if (data) {
+      setBio(data.bio || '');
+      setSpotify(data.spotify || '');
+      setInstagram(data.instagram || '');
+      setReleaseSchedule(data.release_schedule || '');
+    }
+  }
+
+  async function handleSave() {
+    const updates = {
+      id: user.id,
+      bio,
+      spotify,
+      instagram,
+      release_schedule: releaseSchedule,
+      updated_at: new Date(),
+    };
+    await supabase.from('artist_profiles').upsert(updates, { returning: 'minimal' });
+    alert('Profile saved!');
+  }
+
+  async function uploadFile(file, pathPrefix) {
+    const fileName = `${pathPrefix}/${user.id}/${uuidv4()}-${file.name}`;
+    const { error } = await supabase.storage.from('artist-media').upload(fileName, file);
+    if (error) throw error;
+    return fileName;
+  }
+
+  async function handleSubmit() {
+    if (profilePic) await uploadFile(profilePic, 'profile_pictures');
+    if (musicFile) await uploadFile(musicFile, 'music');
+    if (bannerImage) await uploadFile(bannerImage, 'banners');
+    await handleSave();
+  }
+
+  async function logout() {
     await supabase.auth.signOut();
     navigate('/login');
-  };
-
-  const handleUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const filePath = `${user.id}/${file.name}`;
-    const { error } = await supabase
-      .storage
-      .from('artist-uploads')
-      .upload(filePath, file, { upsert: true });
-    if (!error) {
-      const { data } = supabase.storage.from('artist-uploads').getPublicUrl(filePath);
-      setProfileUrl(data.publicUrl);
-    }
-  };
-
-  const handleHeaderUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file || !user) return;
-
-    const filePath = `${user.id}/banner/${file.name}`;
-    const { error } = await supabase
-      .storage
-      .from('artist-uploads')
-      .upload(filePath, file, { upsert: true });
-
-    if (!error) {
-      const { data } = supabase.storage.from('artist-uploads').getPublicUrl(filePath);
-      setHeaderUrl(data.publicUrl);
-    }
-  };
-
-  const handleMusicUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file || !user) return;
-
-    const filePath = `${user.id}/music/${Date.now()}-${file.name}`;
-    const { error } = await supabase
-      .storage
-      .from('artist-uploads')
-      .upload(filePath, file, { upsert: true });
-
-    if (!error) {
-      const { data } = supabase.storage.from('artist-uploads').getPublicUrl(filePath);
-      setUploads((prev) => [...prev, data.publicUrl]);
-    }
-  };
+  }
 
   return (
-    <motion.div
-      className="p-4 sm:p-6 max-w-3xl mx-auto space-y-8 text-gray-800"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.4 }}
-    >
-      {/* Logo */}
-      <header className="flex items-center gap-3">
-        <img src="/logo.png" alt="Runner Logo" className="h-10 w-auto" />
-        <span className="text-xl font-semibold">Runner Music Group Portal</span>
-      </header>
+    <div className="min-h-screen bg-black text-white font-sans p-6">
+      <div className="max-w-4xl mx-auto">
+        {/* Logo */}
+        <img
+          src="/rmg-logo.png"
+          alt="Runner Music Group"
+          className="w-full max-h-96 object-contain rounded-md mb-6 shadow-lg"
+        />
 
-      {/* Banner/Header Image */}
-      <section>
-        <label className="block font-semibold mb-1">Banner / Header Image</label>
-        <input type="file" accept="image/*" onChange={handleHeaderUpload} />
-        {headerUrl && (
-          <img
-            src={headerUrl}
-            alt="Banner"
-            className="w-full h-48 object-cover mt-3 rounded shadow"
-          />
-        )}
-      </section>
+        <h1 className="text-3xl font-bold mb-6 text-white">🎤 Artist Dashboard</h1>
 
-      <h1 className="text-2xl font-bold mt-4">🎛️ Artist Dashboard</h1>
-      <p className="text-sm text-gray-500">Welcome, {user?.email}</p>
+        <p className="mb-2 text-sm text-gray-400">Welcome, <span className="font-medium">{user?.email}</span></p>
 
-      {/* Bio */}
-      <section>
-        <label className="block font-semibold mb-1">Bio</label>
+        {/* Banner Upload */}
+        <label className="block mt-6 mb-2 font-medium">📸 Banner / Header Image</label>
+        <input type="file" onChange={(e) => setBannerImage(e.target.files[0])} className="file-input file-input-bordered w-full" />
+
+        {/* Bio */}
+        <label className="block mt-6 mb-2 font-medium">Bio</label>
         <textarea
-          className="w-full p-3 border rounded shadow-sm"
-          rows={4}
           value={bio}
-          placeholder="Tell the world who you are..."
           onChange={(e) => setBio(e.target.value)}
+          placeholder="Tell the world who you are..."
+          className="w-full p-3 rounded bg-gray-900 border border-gray-700 text-white"
+          rows={3}
         />
-      </section>
 
-      {/* Profile Image Upload */}
-      <section>
-        <label className="block font-semibold mb-1">Profile Picture</label>
-        <input type="file" accept="image/*" onChange={handleUpload} />
-        {profileUrl && (
-          <img
-            src={profileUrl}
-            alt="Profile"
-            className="w-24 h-24 object-cover rounded-full border mt-3"
-          />
-        )}
-      </section>
+        {/* Profile Picture */}
+        <label className="block mt-6 mb-2 font-medium">Profile Picture</label>
+        <input type="file" onChange={(e) => setProfilePic(e.target.files[0])} className="file-input file-input-bordered w-full" />
 
-      {/* Spotify + Instagram Links */}
-      <section className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label className="block font-semibold mb-1">Spotify URL</label>
-          <input
-            type="text"
-            className="w-full p-2 border rounded"
-            value={spotifyUrl}
-            onChange={(e) => setSpotifyUrl(e.target.value)}
-            placeholder="https://open.spotify.com/artist/..."
-          />
-        </div>
-        <div>
-          <label className="block font-semibold mb-1">Instagram URL</label>
-          <input
-            type="text"
-            className="w-full p-2 border rounded"
-            value={instagramUrl}
-            onChange={(e) => setInstagramUrl(e.target.value)}
-            placeholder="https://instagram.com/yourhandle"
-          />
-        </div>
-      </section>
+        {/* Social Links */}
+        <label className="block mt-6 mb-2 font-medium">Spotify URL</label>
+        <input
+          type="url"
+          value={spotify}
+          onChange={(e) => setSpotify(e.target.value)}
+          placeholder="https://open.spotify.com/artist/..."
+          className="w-full p-2 rounded bg-gray-900 border border-gray-700 text-white"
+        />
 
-      {/* Release Schedule */}
-      <section>
-        <label className="block font-semibold mb-1">Release Schedule</label>
+        <label className="block mt-4 mb-2 font-medium">Instagram URL</label>
+        <input
+          type="url"
+          value={instagram}
+          onChange={(e) => setInstagram(e.target.value)}
+          placeholder="https://instagram.com/yourhandle"
+          className="w-full p-2 rounded bg-gray-900 border border-gray-700 text-white"
+        />
+
+        {/* Release Schedule */}
+        <label className="block mt-6 mb-2 font-medium">Release Schedule</label>
         <textarea
-          className="w-full p-3 border rounded shadow-sm"
-          rows={5}
           value={releaseSchedule}
-          placeholder="Upcoming drops, shows, videos, etc..."
           onChange={(e) => setReleaseSchedule(e.target.value)}
+          placeholder="Upcoming drops, shows, videos, etc..."
+          className="w-full p-3 rounded bg-gray-900 border border-gray-700 text-white"
+          rows={3}
         />
-      </section>
 
-      {/* Music Upload */}
-      <section>
-        <h2 className="text-lg font-bold mb-2">🎵 Upload Music</h2>
-        <input type="file" accept=".mp3,.wav,.zip" onChange={handleMusicUpload} />
-        <ul className="mt-4 space-y-4">
-          {uploads.map((url, idx) => {
-            const fileName = url.split('/').pop();
-            const isAudio = fileName.endsWith('.mp3') || fileName.endsWith('.wav');
-            return (
-              <li key={idx} className="border rounded p-3 shadow-sm bg-white">
-                <p className="font-semibold text-sm mb-2">{fileName}</p>
-                {isAudio ? (
-                  <audio controls className="w-full">
-                    <source src={url} />
-                    Your browser does not support the audio element.
-                  </audio>
-                ) : (
-                  <a
-                    className="text-blue-600 underline"
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Download
-                  </a>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      </section>
+        {/* Music Upload */}
+        <div className="mt-8">
+          <h2 className="text-xl font-bold mb-2 text-white">🎵 Upload Music</h2>
+          <input type="file" onChange={(e) => setMusicFile(e.target.files[0])} className="file-input file-input-bordered w-full" />
+        </div>
 
-      {/* Buttons */}
-      <div className="flex flex-wrap gap-3 mt-6">
-        <button
-          onClick={handleSave}
-          className="rounded-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 transition shadow"
-        >
-          Save
-        </button>
-        <button
-          onClick={handleLogout}
-          className="rounded-full bg-red-600 hover:bg-red-700 text-white px-6 py-2 transition shadow"
-        >
-          Logout
-        </button>
+        {/* Buttons */}
+        <div className="mt-6 flex gap-4">
+          <button
+            onClick={handleSubmit}
+            className="px-6 py-2 rounded-full bg-green-600 hover:bg-green-500 transition font-semibold text-white"
+          >
+            Save
+          </button>
+          <button
+            onClick={logout}
+            className="px-6 py-2 rounded-full bg-red-600 hover:bg-red-500 transition font-semibold text-white"
+          >
+            Logout
+          </button>
+        </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
