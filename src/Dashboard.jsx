@@ -9,6 +9,8 @@ export default function Dashboard() {
   const [profileUrl, setProfileUrl] = useState('');
   const [uploads, setUploads] = useState([]);
   const [releaseSchedule, setReleaseSchedule] = useState('');
+  const [spotifyUrl, setSpotifyUrl] = useState('');
+  const [instagramUrl, setInstagramUrl] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,6 +30,8 @@ export default function Dashboard() {
         setBio(data.bio || '');
         setProfileUrl(data.profile_url || '');
         setReleaseSchedule(data.release_schedule || '');
+        setSpotifyUrl(data.spotify_url || '');
+        setInstagramUrl(data.instagram_url || '');
       } else {
         await supabase.from('artist_profiles').insert({ user_id: user.id });
       }
@@ -55,7 +59,9 @@ export default function Dashboard() {
       user_id: user.id,
       bio,
       profile_url: profileUrl,
-      release_schedule: releaseSchedule
+      release_schedule: releaseSchedule,
+      spotify_url: spotifyUrl,
+      instagram_url: instagramUrl
     });
     alert('Saved!');
   };
@@ -128,6 +134,27 @@ export default function Dashboard() {
             className="w-24 h-24 object-cover rounded-full border mt-2"
           />
         )}
+      </div>
+
+      {/* Spotify + Instagram Links */}
+      <div>
+        <label className="block font-semibold mb-1 mt-4">Spotify URL</label>
+        <input
+          type="text"
+          className="w-full p-2 border rounded"
+          value={spotifyUrl}
+          onChange={(e) => setSpotifyUrl(e.target.value)}
+          placeholder="https://open.spotify.com/artist/..."
+        />
+
+        <label className="block font-semibold mb-1 mt-4">Instagram URL</label>
+        <input
+          type="text"
+          className="w-full p-2 border rounded"
+          value={instagramUrl}
+          onChange={(e) => setInstagramUrl(e.target.value)}
+          placeholder="https://instagram.com/yourhandle"
+        />
       </div>
 
       {/* Release Schedule */}
