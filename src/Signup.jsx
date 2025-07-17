@@ -19,7 +19,7 @@ export default function Signup() {
       <input type="email" placeholder="Email" onChange={e => setEmail(e.target.value)} />
       <input type="password" placeholder="Password" onChange={e => setPassword(e.target.value)} />
       <button onClick={handleSignup}>Create Account</button>
-      <p>Already have an account? <a href=\"/login\">Log in</a></p>
+<p>Already have an account? <a href="/login">Log in</a></p>
     </div>
   );
 }
