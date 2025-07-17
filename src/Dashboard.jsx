@@ -7,6 +7,7 @@ export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [bio, setBio] = useState('');
   const [profileUrl, setProfileUrl] = useState('');
+  const [headerUrl, setHeaderUrl] = useState('');
   const [uploads, setUploads] = useState([]);
   const [releaseSchedule, setReleaseSchedule] = useState('');
   const [spotifyUrl, setSpotifyUrl] = useState('');
@@ -29,6 +30,7 @@ export default function Dashboard() {
       if (data) {
         setBio(data.bio || '');
         setProfileUrl(data.profile_url || '');
+        setHeaderUrl(data.header_url || '');
         setReleaseSchedule(data.release_schedule || '');
         setSpotifyUrl(data.spotify_url || '');
         setInstagramUrl(data.instagram_url || '');
@@ -59,9 +61,10 @@ export default function Dashboard() {
       user_id: user.id,
       bio,
       profile_url: profileUrl,
+      header_url: headerUrl,
       release_schedule: releaseSchedule,
       spotify_url: spotifyUrl,
-      instagram_url: instagramUrl
+      instagram_url: instagramUrl,
     });
     alert('Saved!');
   };
@@ -82,6 +85,22 @@ export default function Dashboard() {
     if (!error) {
       const { data } = supabase.storage.from('artist-uploads').getPublicUrl(filePath);
       setProfileUrl(data.publicUrl);
+    }
+  };
+
+  const handleHeaderUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !user) return;
+
+    const filePath = `${user.id}/banner/${file.name}`;
+    const { error } = await supabase
+      .storage
+      .from('artist-uploads')
+      .upload(filePath, file, { upsert: true });
+
+    if (!error) {
+      const { data } = supabase.storage.from('artist-uploads').getPublicUrl(filePath);
+      setHeaderUrl(data.publicUrl);
     }
   };
 
@@ -108,7 +127,26 @@ export default function Dashboard() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
     >
-      <h1 className="text-3xl font-bold">🎛️ Artist Dashboard</h1>
+      {/* Logo */}
+      <header className="flex items-center gap-3">
+        <img src="/logo.png" alt="Runner Logo" className="h-10 w-auto" />
+        <span className="text-xl font-semibold">Runner Music Group Portal</span>
+      </header>
+
+      {/* Banner/Header Image */}
+      <section>
+        <label className="block font-semibold mb-1">Banner / Header Image</label>
+        <input type="file" accept="image/*" onChange={handleHeaderUpload} />
+        {headerUrl && (
+          <img
+            src={headerUrl}
+            alt="Banner"
+            className="w-full h-48 object-cover mt-3 rounded shadow"
+          />
+        )}
+      </section>
+
+      <h1 className="text-2xl font-bold mt-4">🎛️ Artist Dashboard</h1>
       <p className="text-sm text-gray-500">Welcome, {user?.email}</p>
 
       {/* Bio */}
@@ -136,7 +174,7 @@ export default function Dashboard() {
         )}
       </section>
 
-      {/* Links */}
+      {/* Spotify + Instagram Links */}
       <section className="grid gap-4 sm:grid-cols-2">
         <div>
           <label className="block font-semibold mb-1">Spotify URL</label>
@@ -204,7 +242,7 @@ export default function Dashboard() {
         </ul>
       </section>
 
-      {/* Actions */}
+      {/* Buttons */}
       <div className="flex flex-wrap gap-3 mt-6">
         <button
           onClick={handleSave}
