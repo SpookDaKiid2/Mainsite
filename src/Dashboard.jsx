@@ -103,82 +103,85 @@ export default function Dashboard() {
 
   return (
     <motion.div
-      className="p-4 sm:p-6 max-w-2xl mx-auto space-y-6"
+      className="p-4 sm:p-6 max-w-3xl mx-auto space-y-8 text-gray-800"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
     >
-      <h1 className="text-2xl font-bold">Artist Dashboard</h1>
-      <p className="text-sm text-gray-600">Email: {user?.email}</p>
+      <h1 className="text-3xl font-bold">🎛️ Artist Dashboard</h1>
+      <p className="text-sm text-gray-500">Welcome, {user?.email}</p>
 
       {/* Bio */}
-      <div>
+      <section>
         <label className="block font-semibold mb-1">Bio</label>
         <textarea
-          className="w-full p-2 border rounded"
+          className="w-full p-3 border rounded shadow-sm"
           rows={4}
           value={bio}
-          placeholder="Your artist bio..."
+          placeholder="Tell the world who you are..."
           onChange={(e) => setBio(e.target.value)}
         />
-      </div>
+      </section>
 
       {/* Profile Image Upload */}
-      <div>
+      <section>
         <label className="block font-semibold mb-1">Profile Picture</label>
         <input type="file" accept="image/*" onChange={handleUpload} />
         {profileUrl && (
           <img
             src={profileUrl}
             alt="Profile"
-            className="w-24 h-24 object-cover rounded-full border mt-2"
+            className="w-24 h-24 object-cover rounded-full border mt-3"
           />
         )}
-      </div>
+      </section>
 
-      {/* Spotify + Instagram Links */}
-      <div>
-        <label className="block font-semibold mb-1 mt-4">Spotify URL</label>
-        <input
-          type="text"
-          className="w-full p-2 border rounded"
-          value={spotifyUrl}
-          onChange={(e) => setSpotifyUrl(e.target.value)}
-          placeholder="https://open.spotify.com/artist/..."
-        />
-
-        <label className="block font-semibold mb-1 mt-4">Instagram URL</label>
-        <input
-          type="text"
-          className="w-full p-2 border rounded"
-          value={instagramUrl}
-          onChange={(e) => setInstagramUrl(e.target.value)}
-          placeholder="https://instagram.com/yourhandle"
-        />
-      </div>
+      {/* Links */}
+      <section className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className="block font-semibold mb-1">Spotify URL</label>
+          <input
+            type="text"
+            className="w-full p-2 border rounded"
+            value={spotifyUrl}
+            onChange={(e) => setSpotifyUrl(e.target.value)}
+            placeholder="https://open.spotify.com/artist/..."
+          />
+        </div>
+        <div>
+          <label className="block font-semibold mb-1">Instagram URL</label>
+          <input
+            type="text"
+            className="w-full p-2 border rounded"
+            value={instagramUrl}
+            onChange={(e) => setInstagramUrl(e.target.value)}
+            placeholder="https://instagram.com/yourhandle"
+          />
+        </div>
+      </section>
 
       {/* Release Schedule */}
-      <div>
-        <label className="block font-semibold mb-1 mt-4">Release Schedule</label>
+      <section>
+        <label className="block font-semibold mb-1">Release Schedule</label>
         <textarea
-          className="w-full p-2 border rounded"
+          className="w-full p-3 border rounded shadow-sm"
           rows={5}
           value={releaseSchedule}
-          placeholder="Upcoming releases, dates, notes..."
+          placeholder="Upcoming drops, shows, videos, etc..."
           onChange={(e) => setReleaseSchedule(e.target.value)}
         />
-      </div>
+      </section>
 
       {/* Music Upload */}
-      <div>
-        <h2 className="text-lg font-bold mt-6 mb-2">Upload Music</h2>
+      <section>
+        <h2 className="text-lg font-bold mb-2">🎵 Upload Music</h2>
         <input type="file" accept=".mp3,.wav,.zip" onChange={handleMusicUpload} />
         <ul className="mt-4 space-y-4">
           {uploads.map((url, idx) => {
             const fileName = url.split('/').pop();
             const isAudio = fileName.endsWith('.mp3') || fileName.endsWith('.wav');
             return (
-              <li key={idx} className="border rounded p-3 shadow-sm">
+              <li key={idx} className="border rounded p-3 shadow-sm bg-white">
                 <p className="font-semibold text-sm mb-2">{fileName}</p>
                 {isAudio ? (
                   <audio controls className="w-full">
@@ -199,19 +202,19 @@ export default function Dashboard() {
             );
           })}
         </ul>
-      </div>
+      </section>
 
       {/* Actions */}
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3 mt-6">
         <button
           onClick={handleSave}
-          className="rounded-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 transition"
+          className="rounded-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 transition shadow"
         >
           Save
         </button>
         <button
           onClick={handleLogout}
-          className="rounded-full bg-red-600 hover:bg-red-700 text-white px-6 py-2 transition"
+          className="rounded-full bg-red-600 hover:bg-red-700 text-white px-6 py-2 transition shadow"
         >
           Logout
         </button>
