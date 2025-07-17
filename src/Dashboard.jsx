@@ -7,6 +7,7 @@ export default function Dashboard() {
   const [bio, setBio] = useState('');
   const [profileUrl, setProfileUrl] = useState('');
   const [uploads, setUploads] = useState([]);
+  const [releaseSchedule, setReleaseSchedule] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -16,7 +17,6 @@ export default function Dashboard() {
       if (!user) return navigate('/login');
       setUser(user);
 
-      // Load profile
       const { data } = await supabase
         .from('artist_profiles')
         .select('*')
@@ -26,11 +26,11 @@ export default function Dashboard() {
       if (data) {
         setBio(data.bio || '');
         setProfileUrl(data.profile_url || '');
+        setReleaseSchedule(data.release_schedule || '');
       } else {
         await supabase.from('artist_profiles').insert({ user_id: user.id });
       }
 
-      // Load uploaded music files
       const { data: files } = await supabase
         .storage
         .from('artist-uploads')
@@ -53,7 +53,8 @@ export default function Dashboard() {
     await supabase.from('artist_profiles').upsert({
       user_id: user.id,
       bio,
-      profile_url: profileUrl
+      profile_url: profileUrl,
+      release_schedule: releaseSchedule
     });
     alert('Saved!');
   };
@@ -117,6 +118,18 @@ export default function Dashboard() {
             className="w-24 h-24 object-cover rounded-full border"
           />
         )}
+      </div>
+
+      {/* Release Schedule */}
+      <div>
+        <h2 className="text-lg font-bold mt-6">Release Schedule</h2>
+        <textarea
+          className="w-full p-2 border rounded"
+          rows={5}
+          value={releaseSchedule}
+          placeholder="Add upcoming releases, dates, notes..."
+          onChange={(e) => setReleaseSchedule(e.target.value)}
+        />
       </div>
 
       {/* Music Upload */}
