@@ -1,138 +1,139 @@
-import { useEffect, useState } from 'react';
-import { supabase } from './supabaseClient';
-import { v4 as uuidv4 } from 'uuid';
+import React, { useEffect, useState } from 'react';
+import { supabase } from './client';
+import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [bio, setBio] = useState('');
-  const [profilePic, setProfilePic] = useState(null);
-  const [bannerImg, setBannerImg] = useState(null);
   const [spotify, setSpotify] = useState('');
   const [instagram, setInstagram] = useState('');
-  const [releaseSchedule, setReleaseSchedule] = useState('');
-  const [musicFile, setMusicFile] = useState(null);
+  const [file, setFile] = useState(null);
+  const [uploadUrl, setUploadUrl] = useState(null);
+  const [schedule, setSchedule] = useState('');
+  const [adminMode, setAdminMode] = useState(false);
 
   useEffect(() => {
-    const session = supabase.auth.getSession().then(({ data }) => {
-      setUser(data.session?.user ?? null);
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data?.session) navigate('/login');
+      else setUser(data.session.user);
     });
   }, []);
 
-  const uploadFile = async (file, folder) => {
-    if (!file) return null;
-    const fileExt = file.name.split('.').pop();
-    const filePath = `${folder}/${uuidv4()}.${fileExt}`;
-    let { error } = await supabase.storage.from('artist-assets').upload(filePath, file);
-    if (error) console.error(error);
-    return filePath;
+  const handleFileUpload = async () => {
+    if (!file) return;
+    const { data, error } = await supabase.storage
+      .from('artist-files')
+      .upload(`${user.id}/${file.name}`, file, { upsert: true });
+
+    if (error) return alert(error.message);
+    const { data: urlData } = supabase.storage
+      .from('artist-files')
+      .getPublicUrl(`${user.id}/${file.name}`);
+    setUploadUrl(urlData.publicUrl);
   };
 
-  const handleSave = async () => {
-    const updates = { bio, spotify, instagram, releaseSchedule };
-    if (profilePic) updates.profilePic = await uploadFile(profilePic, 'profile-pics');
-    if (bannerImg) updates.bannerImg = await uploadFile(bannerImg, 'banners');
-    if (musicFile) updates.music = await uploadFile(musicFile, 'music');
-
+  const handleSaveProfile = async () => {
     const { error } = await supabase
-      .from('artists')
-      .upsert({ id: user.id, ...updates });
-    if (error) console.error(error);
-    else alert('Saved successfully!');
-  };
+      .from('artist_profiles')
+      .upsert({ id: user.id, bio, spotify, instagram, schedule });
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    window.location.href = '/';
+    if (error) alert(error.message);
+    else alert('Profile saved!');
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-800 font-sans p-6">
-      <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-xl p-6">
-        {/* Logo Header */}
-        <div className="mb-6 text-center">
-          <img src="/logo.png" alt="Runner Music Group" className="h-20 mx-auto mb-2" />
-          <h1 className="text-2xl font-bold">🎤 Artist Dashboard</h1>
-          <p className="text-sm text-gray-500 mt-1">Welcome, {user?.email}</p>
+    <div className="min-h-screen flex bg-gradient-to-br from-zinc-900 to-black text-white">
+      {/* Sidebar */}
+      <aside className="w-64 bg-zinc-800 border-r border-zinc-700 hidden md:flex flex-col p-6 space-y-6">
+        <h2 className="text-xl font-bold">Runner Portal</h2>
+        <button className="text-left hover:text-indigo-400 transition">Dashboard</button>
+        <button className="text-left hover:text-indigo-400 transition">Inbox</button>
+        <button className="text-left hover:text-indigo-400 transition">Settings</button>
+        <div className="mt-auto">
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={adminMode}
+              onChange={() => setAdminMode(!adminMode)}
+              className="accent-indigo-500"
+            />
+            Admin View
+          </label>
         </div>
+      </aside>
 
-        {/* Banner Upload */}
-        <div className="mb-4">
-          <label className="block font-semibold mb-1">📸 Banner / Header Image</label>
-          <input type="file" onChange={(e) => setBannerImg(e.target.files[0])} />
-        </div>
+      {/* Main Content */}
+      <div className="flex-1 p-6 md:p-10 space-y-8">
+        <div className="text-2xl font-bold">Welcome back 👋</div>
 
-        {/* Bio */}
-        <div className="mb-4">
-          <label className="block font-semibold mb-1">Bio</label>
+        {/* Bio + Socials */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <textarea
-            className="w-full border rounded p-2"
-            rows="3"
-            placeholder="Tell the world who you are..."
+            className="bg-zinc-800 p-4 rounded-lg border border-zinc-600 w-full resize-none placeholder-white"
+            rows="4"
+            placeholder="Your artist bio..."
             value={bio}
-            onChange={(e) => setBio(e.target.value)}
+            onChange={e => setBio(e.target.value)}
           />
-        </div>
-
-        {/* Profile Picture */}
-        <div className="mb-4">
-          <label className="block font-semibold mb-1">Profile Picture</label>
-          <input type="file" onChange={(e) => setProfilePic(e.target.files[0])} />
-        </div>
-
-        {/* Social Links */}
-        <div className="mb-4">
-          <label className="block font-semibold mb-1">Spotify URL</label>
-          <input
-            className="w-full border rounded p-2"
-            type="url"
-            placeholder="https://open.spotify.com/artist/..."
-            value={spotify}
-            onChange={(e) => setSpotify(e.target.value)}
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block font-semibold mb-1">Instagram URL</label>
-          <input
-            className="w-full border rounded p-2"
-            type="url"
-            placeholder="https://instagram.com/yourhandle"
-            value={instagram}
-            onChange={(e) => setInstagram(e.target.value)}
-          />
+          <div className="space-y-3">
+            <input
+              className="bg-zinc-800 p-3 rounded-lg border border-zinc-600 w-full placeholder-white"
+              placeholder="Spotify URL"
+              value={spotify}
+              onChange={e => setSpotify(e.target.value)}
+            />
+            <input
+              className="bg-zinc-800 p-3 rounded-lg border border-zinc-600 w-full placeholder-white"
+              placeholder="Instagram URL"
+              value={instagram}
+              onChange={e => setInstagram(e.target.value)}
+            />
+            <button
+              onClick={handleSaveProfile}
+              className="bg-indigo-600 hover:bg-indigo-700 transition text-white px-5 py-2 rounded-full font-semibold"
+            >
+              Save Profile
+            </button>
+          </div>
         </div>
 
         {/* Release Schedule */}
-        <div className="mb-4">
-          <label className="block font-semibold mb-1">Release Schedule</label>
+        <div>
+          <h3 className="font-semibold mb-2">Release Schedule</h3>
           <textarea
-            className="w-full border rounded p-2"
-            rows="2"
-            placeholder="Upcoming drops, shows, videos, etc..."
-            value={releaseSchedule}
-            onChange={(e) => setReleaseSchedule(e.target.value)}
+            className="w-full bg-zinc-800 border border-zinc-600 p-4 rounded-md resize-y placeholder-white"
+            rows="4"
+            placeholder="Add release dates, notes, deadlines..."
+            value={schedule}
+            onChange={e => setSchedule(e.target.value)}
           />
         </div>
 
-        {/* Music Upload */}
-        <div className="mb-4">
-          <label className="block font-semibold mb-1">🎵 Upload Music</label>
-          <input type="file" onChange={(e) => setMusicFile(e.target.files[0])} />
+        {/* File Upload */}
+        <div>
+          <h3 className="font-semibold mb-2">Upload a track</h3>
+          <input
+            type="file"
+            accept="audio/*"
+            onChange={e => setFile(e.target.files[0])}
+            className="text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-indigo-600 file:text-white hover:file:bg-indigo-700"
+          />
+          <button
+            onClick={handleFileUpload}
+            className="ml-4 px-5 py-2 rounded-full bg-green-600 hover:bg-green-700 transition font-semibold"
+          >
+            Upload
+          </button>
+          {uploadUrl && (
+            <audio controls src={uploadUrl} className="mt-4 w-full rounded-lg" />
+          )}
         </div>
 
-        {/* Buttons */}
-        <div className="flex justify-between mt-6">
-          <button
-            onClick={handleSave}
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-          >
-            Save
-          </button>
-          <button
-            onClick={handleLogout}
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-          >
-            Logout
-          </button>
+        {/* Fan Inbox (Mock) */}
+        <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700">
+          <h3 className="text-lg font-semibold mb-2">📨 Fan Inbox (Coming Soon)</h3>
+          <p className="text-zinc-400 text-sm">Messages from fans will appear here.</p>
         </div>
       </div>
     </div>

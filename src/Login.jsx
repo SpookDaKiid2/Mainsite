@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from './supabaseClient';
+import { supabase } from './client';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -14,12 +14,36 @@ export default function Login() {
   };
 
   return (
-    <div className="p-6 max-w-sm mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Login</h1>
-      <input type="email" placeholder="Email" onChange={e => setEmail(e.target.value)} />
-      <input type="password" placeholder="Password" onChange={e => setPassword(e.target.value)} />
-      <button onClick={handleLogin}>Login</button>
-<p>Don’t have an account? <a href="/signup">Sign up</a></p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black via-zinc-800 to-neutral-900 p-4">
+      <div className="w-full max-w-md bg-white/10 backdrop-blur-sm p-8 rounded-xl border border-zinc-700 shadow-lg">
+        <h1 className="text-3xl font-bold text-white mb-6 text-center">Login</h1>
+
+        <input
+          className="w-full p-3 mb-4 rounded-md bg-white/20 placeholder-white text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          type="email"
+          placeholder="Email"
+          onChange={e => setEmail(e.target.value)}
+        />
+
+        <input
+          className="w-full p-3 mb-6 rounded-md bg-white/20 placeholder-white text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          type="password"
+          placeholder="Password"
+          onChange={e => setPassword(e.target.value)}
+        />
+
+        <button
+          className="w-full py-3 rounded-full bg-indigo-600 hover:bg-indigo-700 transition text-white font-semibold"
+          onClick={handleLogin}
+        >
+          Sign In
+        </button>
+
+        <p className="mt-4 text-center text-white text-sm">
+          Don’t have an account? <a href="/signup" className="text-indigo-400 hover:underline">Sign up</a>
+        </p>
+      </div>
     </div>
   );
 }
+
