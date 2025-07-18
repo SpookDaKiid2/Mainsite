@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from './client';
 import AudioPlayer from 'react-h5-audio-player';
 import 'react-h5-audio-player/lib/styles.css';
-import logo from '/logo.png'; // assuming your logo is in public/logo.png
+// remove the import entirely; // assuming your logo is in public/logo.png
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
@@ -28,7 +28,7 @@ export default function Dashboard() {
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
       <aside className="w-64 bg-black text-white flex flex-col items-center py-8">
-        <img src={logo} alt="Logo" className="h-16 mb-6" />
+        <img src="/logo.png" alt="Logo" className="h-16 mb-6" />
         <nav className="flex flex-col space-y-4 w-full text-center">
           <a href="/dashboard" className="hover:bg-gray-800 py-2 w-full block">Dashboard</a>
           <a href="#" className="hover:bg-gray-800 py-2 w-full block">My Songs</a>
