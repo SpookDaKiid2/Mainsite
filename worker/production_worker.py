@@ -24,17 +24,28 @@ for i in range(count):
  rnd=random.Random(int(hashlib.sha256(f"r444-new-only-{n}".encode()).hexdigest()[:16],16))
  place,action,cam=rnd.choice(places),rnd.choice(actions),rnd.choice(cameras)
  if cat=="spook":
-  lead="exact Spookdakiid-2 identity reference <<<93374667-5679-4f98-b590-65b4319d26b3>>>";wardrobe=rnd.choice(outfits);music="Spook-labeled audio"
+  lead="@Spookdakiid-2 (select the saved character as a visual reference in Higgsfield)";wardrobe=rnd.choice(outfits);music="Spook-labeled audio"
  elif cat=="buchi":
-  lead="exact Buchi identity reference <<<8080b618-1008-4140-9acd-2bfbb8c40d4d>>>";wardrobe=rnd.choice(outfits);music="Zagg or ZaggZekee-labeled audio"
+  lead="@Buchi (select the saved character as a visual reference in Higgsfield)";wardrobe=rnd.choice(outfits);music="Zagg or ZaggZekee-labeled audio"
  elif cat=="pill":
   lead="the established original Pill Money Afro and bald stitched-face characters, warm brown uninterrupted center-seam leather masks without facial openings";wardrobe="existing white/forest-green/gold hockey jersey, crown and ROLEX chest, back TIME IS CURRENCY and 41, sleeve numerals left 28/right 36, unchanged";music="licensed original soundtrack"
  else:
   lead="a new original African-American lead wearing "+rnd.choice(masks);wardrobe=rnd.choice(outfits);music="unlabeled music"
- prompt=f"Produce NEW 480p 9:16 footage: {lead}; {wardrobe}. Location: {place}. Subject {action}. Camera {cam}. Pill Money monogram, if visible, must be genuinely transparent or physically printed/embossed on a real prop, never on a white rectangle. {terms}"
+ prompt=f"Produce NEW 720p 9:16 footage lasting 10 seconds: {lead}; {wardrobe}. Location: {place}. Subject {action}. Camera {cam}. Pill Money monogram, if visible, must be genuinely transparent or physically printed/embossed on a real prop, never on a white rectangle. {terms}"
  db.execute("INSERT INTO concepts (id,category,prompt,created_at) VALUES (?,?,?,?)",(n,cat,prompt,datetime.datetime.now(datetime.timezone.utc).isoformat()))
  output.append({"shot_id":f"NEW-{n:06d}","category":cat,"music_rule":music,"prompt":prompt,"generation_status":"NOT_SUBMITTED__FREE_ONLY_GUARD"})
 db.commit()
-(OUT/"fresh_prompts.json").write_text(json.dumps({"generated_at":datetime.datetime.now(datetime.timezone.utc).isoformat(),"new_briefs":len(output),"credits_spent":0,"actual_videos_generated":0,"why_no_video":"Official Higgsfield external API uses paid credit balance; account Unlimited does not cover it.","concepts":output},indent=2))
+(OUT/"fresh_prompts.json").write_text(json.dumps({"generated_at":datetime.datetime.now(datetime.timezone.utc).isoformat(),"new_briefs":len(output),"credits_spent":0,"actual_videos_generated":0,"why_no_video":"Higgsfield Unlimited is website-only. Official external generation API and automated scripted use cannot use this allowance.","concepts":output},indent=2))
+readme_lines=[
+ "# ORIGINAL SHOTS — READY FOR HIGGSFIELD WEBSITE",
+ "",
+ "These are genuinely new production briefs only. None has been rendered. To use your current unlimited website allowance: open Higgsfield's Video generator, select Seedance 2.5, choose 720p and 9:16, turn **Unlimited ON**, set 10 seconds, and submit one generation at a time. Check the Generate button shows **0 credits** before clicking.",
+ "When using @Spookdakiid-2 or @Buchi, pick the saved character reference in the Higgsfield interface; the character name in the text alone may not attach the reference. Pill Money needs the approved stitched-face, jersey and logo image references manually attached.",
+ "The worker never performs automated Higgsfield website actions. Do not set up scripted browser submission for Unlimited.",
+ ""
+]
+for item in output:
+ readme_lines.extend(["## "+item["shot_id"]+" — "+item["category"], "**Audio casting:** "+item["music_rule"], "", item["prompt"], ""])
+(OUT/"ready_for_higgsfield.md").write_text("\n".join(readme_lines))
 print(f"Prepared {len(output)} brand-new briefs; total stored {db.execute('SELECT COUNT(*) FROM concepts').fetchone()[0]}; zero credits spent; no video submissions.")
 db.close()
