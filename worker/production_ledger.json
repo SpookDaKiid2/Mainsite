@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "policy": "Only new original assets. No previous video footage reuse. Higgsfield credits must remain unchanged. Keep media private in Higgsfield/Drive; do not publish source URLs in this public repo.",
+  "last_checked": "2026-11-20T16:56:40Z",
+  "delivered_motion": [],
+  "original_character_sheets": [
+    {
+      "concept": "AMBER CIRCUIT",
+      "category": "original_masked",
+      "generation_id": "e0c0f180-e60e-4f5e-bc0f-d5f036c5ec89",
+      "model": "ai_influencer_sheet",
+      "status": "completed",
+      "source": "Higgsfield account only",
+      "credits_spent": 0,
+      "free_gen_used": 1,
+      "seed": 593021,
+      "not_video": true
+    }
+  ],
+  "cast_references": {
+    "spook": "93374667-5679-4f98-b590-65b4319d26b3",
+    "buchi": "8080b618-1008-4140-9acd-2bfbb8c40d4d"
+  },
+  "music_folder_id": "1epzLkyVFQNhj06WZfks6_UZoU3rX2xuS",
+  "note": "Folder READY_FOR_EDIT contained two existing motion clips on first inspection; not claimed as new outputs of this run. New motion generation via MCP blocked because unlim_available=false and free motion counters=0."
+}
