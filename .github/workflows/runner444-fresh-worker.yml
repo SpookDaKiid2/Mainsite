@@ -1,0 +1,41 @@
+name: Runner444 Fresh Concept Worker
+
+on:
+  schedule:
+    - cron: '3/5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: runner444-free-concepts
+  cancel-in-progress: false
+
+jobs:
+  build-original-concepts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Restore deduplication state
+        uses: actions/cache/restore@v4
+        with:
+          path: worker/state/
+          key: runner444-factory-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            runner444-factory-
+      - name: Generate eight fresh concepts with zero video/API charges
+        run: python3 worker/production_worker.py
+      - name: Preserve deduplication state
+        uses: actions/cache/save@v4
+        with:
+          path: worker/state/
+          key: runner444-factory-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Upload new shot briefs
+        uses: actions/upload-artifact@v4
+        with:
+          name: original-shot-briefs-${{ github.run_id }}
+          path: worker/out/fresh_prompts.json
+          retention-days: 3
