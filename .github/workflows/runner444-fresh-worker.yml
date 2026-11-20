@@ -37,5 +37,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: original-shot-briefs-${{ github.run_id }}
-          path: worker/out/fresh_prompts.json
+          path: worker/out/
           retention-days: 3
